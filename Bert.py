@@ -133,3 +133,81 @@ def evaluate_model(model, texts, labels):
 
 # Example usage:
 # evaluate_model(model, test_texts, test_labels)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import torch
+from torch.utils.data import DataLoader
+from transformers import BertTokenizer, BertForSequenceClassification
+from datasets import Dataset
+
+# Load the Trained Model and Tokenizer
+model_path = "bert_multi_class_model"  # Path where your trained model is saved
+model = BertForSequenceClassification.from_pretrained(model_path)
+tokenizer = BertTokenizer.from_pretrained(model_path)
+
+# Move model to GPU
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model.to(device)
+
+# Function to Tokenize and Prepare Dataset
+def prepare_inference_data(texts, tokenizer, max_length=128):
+    tokenized_data = tokenizer(
+        texts, padding=True, truncation=True, max_length=max_length, return_tensors="pt"
+    )
+    return Dataset.from_dict(tokenized_data)
+
+# Example: Replace this with your large dataset
+texts = ["Sample text 1", "Sample text 2", "Sample text 3", "..."]  # Replace with your large dataset
+
+# Prepare Dataset for Prediction
+inference_dataset = prepare_inference_data(texts, tokenizer)
+
+# DataLoader for Efficient Batch Prediction
+batch_size = 16
+inference_loader = DataLoader(inference_dataset, batch_size=batch_size, shuffle=False)
+
+# Function for Batch Prediction
+def predict(model, data_loader):
+    model.eval()  # Set model to evaluation mode
+    all_predictions = []
+
+    with torch.no_grad():
+        for batch in data_loader:
+            # Move inputs to GPU
+            inputs = {k: v.to(device) for k, v in batch.items()}
+
+            # Perform forward pass
+            outputs = model(**inputs)
+            predictions = torch.argmax(outputs.logits, dim=-1)  # Get predicted class
+
+            # Move predictions to CPU and store
+            all_predictions.extend(predictions.cpu().numpy())
+
+    return all_predictions
+
+# Perform Prediction
+predictions = predict(model, inference_loader)
+
+# Save Predictions (Optional)
+with open("predictions.txt", "w") as f:
+    for pred in predictions:
+        f.write(f"{pred}\n")
+
+print(f"Total Predictions: {len(predictions)}")
+
