@@ -1,0 +1,21 @@
+import os
+import shutil
+
+# Define source and destination folders
+source_folder = "path/to/source/folder"
+destination_folder = "path/to/destination/folder"
+
+# Ensure the destination folder exists
+os.makedirs(destination_folder, exist_ok=True)
+
+# Loop through files in the source folder
+for file_name in os.listdir(source_folder):
+    if file_name.endswith("modified.html"):  # Check if the file name ends with "modified"
+        source_path = os.path.join(source_folder, file_name)
+        destination_path = os.path.join(destination_folder, file_name)
+        
+        # Move the file
+        shutil.move(source_path, destination_path)
+        print(f"Moved: {file_name}")
+
+print("File moving process completed.")
